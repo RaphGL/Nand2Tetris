@@ -1,69 +1,49 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/02/ALU.hdl
-
-/**
- * The ALU (Arithmetic Logic Unit).
- * Computes one of the following functions:
- * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
- * x+1, y+1, x-1, y-1, x&y, x|y on two 16-bit inputs, 
- * according to 6 input bits denoted zx,nx,zy,ny,f,no.
- * In addition, the ALU computes two 1-bit outputs:
- * if the ALU output == 0, zr is set to 1; otherwise zr is set to 0;
- * if the ALU output < 0, ng is set to 1; otherwise ng is set to 0.
- */
-
-// Implementation: the ALU logic manipulates the x and y inputs
-// and operates on the resulting values, as follows:
-// if (zx == 1) set x = 0        // 16-bit constant
-// if (nx == 1) set x = !x       // bitwise not
-// if (zy == 1) set y = 0        // 16-bit constant
-// if (ny == 1) set y = !y       // bitwise not
-// if (f == 1)  set out = x + y  // integer 2's complement addition
-// if (f == 0)  set out = x & y  // bitwise and
-// if (no == 1) set out = !out   // bitwise not
-// if (out == 0) set zr = 1
-// if (out < 0) set ng = 1
-
 CHIP ALU {
-    IN  
-        x[16], y[16],  // 16-bit inputs        
-        zx, // zero the x input?
-        nx, // negate the x input?
-        zy, // zero the y input?
-        ny, // negate the y input?
-        f,  // compute out = x + y (if 1) or x & y (if 0)
-        no; // negate the out output?
+	IN 
+		x[16], y[16],
+		zx, // if zx then x = 0
+		nx, // if nx then x = !x
+		zy, // if zy then y = 0
+		ny, // if ny then y = !y
+		f, // if f then out = x + y else out = x & y
+		no; // if no then out = !out
 
-    OUT 
-        out[16], // 16-bit output
-        zr, // 1 if (out == 0), 0 otherwise
-        ng; // 1 if (out < 0),  0 otherwise
+	OUT
+		out[16],
+		zr, // if out == 0 then zr = 1 else zr = 0
+		ng; // if out < 0 then ng = 1 else ng = 0
 
-    PARTS:
+	PARTS:
     // zx
     Mux16(a=x, b=false, sel=zx, out=zxout);
     // nx
-    Not16(in=zxout, out=nzxout);
-    Mux16(a=zxout, b=nzxout, sel=nx, out=nxout);
-    //zy
+    Not16(in=zxout, out=notzxout);
+    Mux16(a=zxout, b=notzxout, sel=nx, out=nxout);
+    
+    // zx
     Mux16(a=y, b=false, sel=zy, out=zyout);
-    // ny
-    Not16(in=zyout, out=nzyout);
-    Mux16(a=zyout, b=nzyout, sel=ny, out=nyout);
+    // nx
+    Not16(in=zyout, out=notzyout);
+    Mux16(a=zyout, b=notzyout, sel=ny, out=nyout);
+
     // f
-    And16(a=nxout, b=nyout, out=andout);
-    Add16(a=nxout, b=nyout, out=addout);
-    Mux16(a=andout, b=addout, sel=f, out=fout);
+    Add16(a=nxout, b=nyout, out=addxy);
+    And16(a=nxout, b=nyout, out=andxy);
+    Mux16(a=andxy, b=addxy, sel=f, out=fout);
+
     // no
-    Not16(in=fout, out=nfout);
-    Mux16(a=fout, b=nfout, sel=no, out[0..7]=nout1, out[8..14]=nout2, out[15]=noutMSB);
+    Not16(in=fout, out=notfout);
+    Mux16(a=fout, b=notfout, sel=no, out[0..7]=noout1, out[8..14]=noout2, out[15]=msb);
+
     // zr
-    Or16Way(in[0..7]=nout1, in[8..14]=nout2, in[15]=noutMSB, out=orout);
+    Or8Way(in=noout1, out=half1);
+    Or8Way(in[0..6]=noout2, in[7]=msb, out=half2);
+    Or(a=half1, b=half2, out=orout);
     Not(in=orout, out=zr);
+    
     // ng
-    Or(a=noutMSB, b=false, out=ng);
-    // ALU output
-    Mux16(a[0..7]=nout1, a[8..14]=nout2, a[15]=noutMSB, b=false, sel=false, out=out);
+    Mux(a=false, b=true, sel=msb, out=ng);
+
+    // out
+    Mux16(a[0..7]=noout1, a[8..14]=noout2, a[15]=msb, b=false, sel=false, out=out);
 }
