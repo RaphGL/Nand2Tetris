@@ -3,27 +3,33 @@
 // by Nisan and Schocken, MIT Press.
 // File name: projects/08/FunctionCalls/SimpleFunction/SimpleFunction.tst
 
+// Tests SimpleFunction.asm in the CPU emulator.
+// In particular, tests how the assembly implementation of the 'function'
+// VM command initializes local variables, and how assembly implementation
+// of the 'return' VM command handles the return value, SP, LCL, ARG, THIS, and THAT. 
+
 load SimpleFunction.asm,
 output-file SimpleFunction.out,
 compare-to SimpleFunction.cmp,
-output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 
-            RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[310]%D1.6.1;
 
-set RAM[0] 317,
-set RAM[1] 317,
-set RAM[2] 310,
-set RAM[3] 3000,
-set RAM[4] 4000,
-set RAM[310] 1234,
-set RAM[311] 37,
-set RAM[312] 1000,
+set RAM[0] 317,    // SP
+set RAM[1] 317,    // LCL
+set RAM[2] 310,    // ARG
+set RAM[3] 3000,   // THIS
+set RAM[4] 4000,   // THAT
+set RAM[310] 1234, 
+set RAM[311] 37,    
+set RAM[312] 1000, 
 set RAM[313] 305,
 set RAM[314] 300,
 set RAM[315] 3010,
-set RAM[316] 4010,
+set RAM[316] 4010, 
 
 repeat 300 {
-  ticktock;
+	ticktock;
 }
 
+// Outputs SP, LCL, ARG, THIS, THAT, and the return value.
+output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 
+            RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[310]%D1.6.1;
 output;

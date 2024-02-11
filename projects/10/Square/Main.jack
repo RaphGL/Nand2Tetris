@@ -17,7 +17,7 @@ class Main {
       return;
     }
 
-    function void test() {  // Added to test Jack syntax that is not use in
+    function void more() {  // Added to test Jack syntax that is not used in
         var int i, j;       // the Square files.
         var String s;
         var Array a;

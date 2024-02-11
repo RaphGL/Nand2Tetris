@@ -1,18 +1,16 @@
-// This file is part of the materials accompanying the book
-// "The Elements of Computing Systems" by Nisan and Schocken, 
-// MIT Press. Book site: www.idc.ac.il/tecs
-// File name: tools/builtIn/DRegister.hdl
-
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: tools/builtInChips/DRegister.hdl
 /**
- * A 16-Bit register called "D Register". 
- * If load[t-1]=1 then out[t] = in[t-1]
- * else out does not change (out[t] = out[t-1])
+ * A 16-bit register named DRegister with the same functionality
+ * of the Register chip:
+ * If load is asserted, the register's value is set to in;
+ * Otherwise, the register maintains its current value.
+ * out(t+1) = (load(t), in(t), out(t))
  *
- * This built-in chip implementation has the side effect of 
- * providing a GUI representation of a 16-bit register
- * called "D register" (typically used to store data).
+ * This built-in implementation has a visualization side effect.
  */
-
 CHIP DRegister {
 
     IN  in[16], load;

@@ -17,19 +17,11 @@ class Main {
         return;
     }
 
-    function void test() {  // Added to test Jack syntax that is not use in
-        var int i, j;       // the Square files.
-        var String s;
-        var Array a;
-        if (i) {
-            let s = i;
-            let s = j;
-            let a[i] = j;
+    function void more() {  // Added to test Jack syntax that is not used in
+        var boolean b;      // the Square files.
+        if (b) {
         }
         else {              // There is no else keyword in the Square files.
-            let i = i;
-            let j = j;
-            let i = i | j;
         }
         return;
     }

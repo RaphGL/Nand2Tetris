@@ -1,13 +1,12 @@
 // This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: tools/builtIn/Mux.hdl
-
+// File name: tools/builtInChips/Mux.hdl
 /** 
- * Multiplexor. If sel == 1 then out = b else out = a.
+ * Multiplexor:
+ * out = ((sel == 0), a, b)
  */
-
-CHIP Mux {
+ CHIP Mux {
 
     IN  a, b, sel;
     OUT out;

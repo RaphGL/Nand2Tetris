@@ -1,13 +1,12 @@
 // This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: tools/builtIn/Or.hdl
-
+// File name: tools/builtInChips/Or.hdl
 /**
- * Or gate: out = 1 if {a == 1 or b == 1}, 0 otherwise  
+ * Or gate:
+ * out = (((a == 1) || (b == 1))), 1, 0) 
  */
-
-CHIP Or {
+ CHIP Or {
 
     IN  a, b;
     OUT out;

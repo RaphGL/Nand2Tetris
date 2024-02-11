@@ -1,13 +1,12 @@
 // This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: tools/builtIn/Not.hdl
-
-/**
- * Not gate: out = not in 
+// File name: tools/builtInChips/Not.hdl
+ /**
+ * Not gate:
+ * out = ((in == 0), 1, 0)
  */
-
-CHIP Not {
+ CHIP Not {
 
     IN  in;
     OUT out;

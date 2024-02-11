@@ -3,14 +3,23 @@
 // by Nisan and Schocken, MIT Press.
 // File name: projects/05/Memory.tst
 
+// Tests the Memory chip by inputting values to selected addresses, 
+// verifying that these addresses were indeed written to, and verifying  
+// that other addresses were not accessed by mistake. In particular, we 
+// focus on probing the registers in addresses 'lower RAM', 'upper RAM',
+// and 'Screen', which correspond to 0, %X2000, and %X4000 in Hexadecimal 
+// (0, 8192 (8K), and 16385 (16K+1) in decimal).
+
 load Memory.hdl,
 output-file Memory.out,
 compare-to Memory.cmp,
+// Outputs the values of the in, load, and address inputs, 
+// and the value of the out output. 
 output-list in%D1.6.1 load%B2.1.2 address%B1.15.1 out%D1.6.1;
 
-echo "Before you run this script, select the 'Screen' option from the 'View' menu";
+echo "Before running this script, select the 'Screen' option from the 'View' menu";
 
-set in -1,				// Set RAM[0] = -1
+set in -1,				// Sets RAM[0] = -1
 set load 1,
 set address 0,
 tick,
@@ -18,21 +27,21 @@ output;
 tock,
 output;
 
-set in 9999,			// RAM[0] holds value
+set in 9999,			// Checks that RAM[0] was not written to when load == 0
 set load 0,
 tick,
 output;
 tock,
 output;
 
-set address %X2000,		// Did not also write to upper RAM or Screen
+set address %X2000,		// Checks that the upper RAM or Screen were not written to
 eval,
 output;
 set address %X4000,
 eval,
 output;
 
-set in 2222,			// Set RAM[2000] = 2222
+set in 2222,			// Sets RAM[%X2000] = 2222
 set load 1,
 set address %X2000,
 tick,
@@ -40,14 +49,14 @@ output;
 tock,
 output;
 
-set in 9999,			// RAM[2000] holds value
+set in 9999,			// Checks that RAM[%X2000] was not written to when load == 0
 set load 0,
 tick,
 output;
 tock,
 output;
 
-set address 0,			// Did not also write to lower RAM or Screen
+set address 0,			// Checks that the lower RAM or Screen were not written to
 eval,
 output;
 set address %X4000,
@@ -70,7 +79,7 @@ set address %X0800, eval, output;
 set address %X1000, eval, output;
 set address %X2000, eval, output;
 
-set address %X1234,		// RAM[1234] = 1234
+set address %X1234,		// Sets RAM[%X1234] = 1234
 set in 1234,
 set load 1,
 tick,
@@ -79,12 +88,12 @@ tock,
 output;
 
 set load 0,
-set address %X2234,		// Did not also write to upper RAM or Screen 
+set address %X2234,		// Checks that the upper RAM or Screen were not written to 
 eval, output;
 set address %X6234,
 eval, output;
 
-set address %X2345,		// RAM[2345] = 2345
+set address %X2345,		// RAM[%X2345] = 2345
 set in 2345,
 set load 1,
 tick,
@@ -93,7 +102,7 @@ tock,
 output;
 
 set load 0,
-set address %X0345,		// Did not also write to lower RAM or Screen 
+set address %X0345,		// Checks that the lower RAM or Screen were not written to 
 eval, output;
 set address %X4345,
 eval, output;
@@ -126,7 +135,7 @@ tick,
 tock,
 output;
 
-set address %X0FCF,		// Did not also write to lower or upper RAM
+set address %X0FCF,		// Checks that the lower or upper RAM were not written to
 eval,
 output;
 set address %X2FCF,
@@ -147,7 +156,6 @@ set address %X4DCF, eval, output;
 set address %X4BCF, eval, output;
 set address %X47CF, eval, output;
 set address %X5FCF, eval, output;
-
 
 set load 0,
 set address 24576,

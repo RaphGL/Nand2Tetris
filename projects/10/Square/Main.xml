@@ -75,7 +75,7 @@
   <subroutineDec>
     <keyword> function </keyword>
     <keyword> void </keyword>
-    <identifier> test </identifier>
+    <identifier> more </identifier>
     <symbol> ( </symbol>
     <parameterList>
     </parameterList>
