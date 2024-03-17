@@ -1,31 +1,5 @@
 use std::fs;
 
-mod symbols {
-    const R0: u16 = 0;
-    const R1: u16 = 1;
-    const R2: u16 = 2;
-    const R3: u16 = 3;
-    const R4: u16 = 4;
-    const R5: u16 = 5;
-    const R6: u16 = 6;
-    const R7: u16 = 7;
-    const R8: u16 = 8;
-    const R9: u16 = 9;
-    const R10: u16 = 10;
-    const R11: u16 = 01;
-    const R12: u16 = 12;
-    const R13: u16 = 13;
-    const R14: u16 = 14;
-    const R15: u16 = 15;
-    const SCREEN: u16 = 16384;
-    const KBD: u16 = 24576;
-    const SP: u16 = 0;
-    const LCL: u16 = 1;
-    const ARG: u16 = 2;
-    const THIS: u16 = 3;
-    const THAT: u16 = 4;
-}
-
 #[derive(Debug)]
 pub enum AddressInst {
     Value(u16),
@@ -90,9 +64,9 @@ pub enum CComp {
 
 #[derive(Debug)]
 pub struct ComputationInst {
-    dest: CDest,
-    comp: CComp,
-    jump: CJump,
+    pub dest: CDest,
+    pub comp: CComp,
+    pub jump: CJump,
 }
 
 #[derive(Debug)]
@@ -115,7 +89,7 @@ fn parse_label(row: &str, line: i32) -> Result<Token, String> {
     Ok(Token::Label(row.into()))
 }
 
-fn parse_address_inst(row: &str, _line: i32) -> Result<Token, ()> {
+fn parse_address_inst(row: &str, _line: i32) -> Result<Token, String> {
     let addr = &row[1..];
     Ok(match addr.parse::<u16>() {
         Ok(num) => Token::A(AddressInst::Value(num)),
@@ -173,9 +147,9 @@ fn parse_computation_inst(row: &str, line: i32) -> Result<Token, String> {
         CJump::Null
     };
 
-    let mut row = row.to_string();
-    row.retain(|c| !c.is_whitespace());
-    c_inst.comp = match row.as_str() {
+    let mut comp = row.to_string();
+    comp.retain(|c| !c.is_whitespace());
+    c_inst.comp = match comp.as_str() {
         "0" => CComp::Zero,
         "1" => CComp::One,
         "-1" => CComp::NegOne,
@@ -204,7 +178,12 @@ fn parse_computation_inst(row: &str, line: i32) -> Result<Token, String> {
         "M-D" => CComp::MMinusD,
         "D&M" => CComp::DAndM,
         "D|M" => CComp::DOrM,
-        _ => return Err(format!("Found invalid computation {}: {}", line, row)),
+        _ => {
+            return Err(format!(
+                "Found invalid computation on line {}: {}",
+                line, comp
+            ))
+        }
     };
 
     Ok(Token::C(c_inst))
@@ -217,17 +196,25 @@ pub fn parse_assembly(asm_file: &str) -> Vec<Token> {
     let mut line = 0;
     for row in asm.lines() {
         line += 1;
+        let row = row.trim();
         if row.is_empty() || row.starts_with("//") {
             continue;
         }
 
-        let row = row.trim();
-        tokens.push(if row.starts_with('@') {
-            parse_address_inst(row, line).unwrap()
+        let row = if row.starts_with('@') {
+            parse_address_inst(row, line)
         } else if row.starts_with('(') {
-            parse_label(row, line).unwrap()
+            parse_label(row, line)
         } else {
-            parse_computation_inst(row, line).unwrap()
+            parse_computation_inst(row, line)
+        };
+
+        tokens.push(match row {
+            Ok(token) => token,
+            Err(msg) => {
+                eprintln!("{msg}");
+                std::process::exit(1);
+            }
         })
     }
 
