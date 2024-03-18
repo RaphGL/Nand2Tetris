@@ -47,8 +47,9 @@ impl Assembler {
                 if !self.symbols.contains_key(label) {
                     self.symbols.insert(label.clone(), line_count);
                 }
+            } else {
+                line_count += 1;
             }
-            line_count += 1;
         }
 
         let mut var_count = VAR_START;
@@ -133,7 +134,6 @@ impl Assembler {
     pub fn assemble(&self) -> Vec<u16> {
         let mut insts = Vec::new();
         for token in &self.tokens {
-            println!("{:?}", token);
             let inst = match token {
                 Token::A(a_inst) => self.compile_a_instruction(a_inst),
                 Token::C(c_inst) => self.compile_c_instruction(c_inst),
@@ -157,10 +157,10 @@ mod tests {
         let inst = asm.compile_c_instruction(&ComputationInst {
             dest: CDest::MD,
             comp: CComp::DPlusOne,
-            jump: CJump::Null,
+            jump: CJump::JGT,
         });
 
-        assert_eq!(inst, 0b1110011111011000);
+        assert_eq!(inst, 0b1110011111011001);
     }
 
     #[test]

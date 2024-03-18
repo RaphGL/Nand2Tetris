@@ -1,12 +1,10 @@
 use std::fs;
 
-#[derive(Debug)]
 pub enum AddressInst {
     Value(u16),
     Symbol(String),
 }
 
-#[derive(Debug)]
 pub enum CDest {
     Null,
     M,
@@ -18,7 +16,6 @@ pub enum CDest {
     AMD,
 }
 
-#[derive(Debug)]
 pub enum CJump {
     Null,
     JGT,
@@ -30,7 +27,6 @@ pub enum CJump {
     JMP,
 }
 
-#[derive(Debug)]
 pub enum CComp {
     Zero,
     One,
@@ -62,14 +58,12 @@ pub enum CComp {
     DOrM,
 }
 
-#[derive(Debug)]
 pub struct ComputationInst {
     pub dest: CDest,
     pub comp: CComp,
     pub jump: CJump,
 }
 
-#[derive(Debug)]
 pub enum Token {
     A(AddressInst),
     C(ComputationInst),
