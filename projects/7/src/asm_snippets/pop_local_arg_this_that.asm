@@ -10,7 +10,7 @@ M=D
 M=M-1
 
 A=M
-M=D
+D=M
 @addr
 A=M
 M=D

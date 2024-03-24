@@ -117,7 +117,7 @@ fn generate_vm_code(parser: Parser) -> String {
     let file = Path::new(parser.file);
     let filename = file.file_stem().unwrap().to_str().unwrap();
 
-    for inst in parser.tokens {
+    for (i, inst) in parser.tokens.iter().enumerate() {
         asm.push_str(
             match inst {
                 Inst::Push(push) => match push {
@@ -129,7 +129,9 @@ fn generate_vm_code(parser: Parser) -> String {
                         format!(include_str!("asm_snippets/push_static.asm"), filename, arg)
                     }
 
-                    SegmentAddr::Temp(arg) => format!(include_str!("asm_snippets/push_temp.asm"), arg)                    ,
+                    SegmentAddr::Temp(arg) => {
+                        format!(include_str!("asm_snippets/push_temp.asm"), arg)
+                    }
 
                     SegmentAddr::Pointer(arg) => {
                         let addr = match arg {
@@ -153,7 +155,10 @@ fn generate_vm_code(parser: Parser) -> String {
                             _ => unreachable!(),
                         };
 
-                        format!(include_str!("asm_snippets/push_local_arg_this_that.asm"), base_addr, arg)
+                        format!(
+                            include_str!("asm_snippets/push_local_arg_this_that.asm"),
+                            base_addr, arg
+                        )
                     }
                 },
 
@@ -164,7 +169,9 @@ fn generate_vm_code(parser: Parser) -> String {
                         format!(include_str!("asm_snippets/pop_static.asm"), filename, arg)
                     }
 
-                    SegmentAddr::Temp(arg) => format!(include_str!("asm_snippets/pop_temp.asm"), arg),
+                    SegmentAddr::Temp(arg) => {
+                        format!(include_str!("asm_snippets/pop_temp.asm"), arg)
+                    }
 
                     SegmentAddr::Pointer(arg) => {
                         let addr = match arg {
@@ -173,7 +180,7 @@ fn generate_vm_code(parser: Parser) -> String {
                             _ => unreachable!(),
                         };
 
-                        format!(include_str!("asm_snippets/push_pointer.asm"), addr)
+                        format!(include_str!("asm_snippets/pop_pointer.asm"), addr)
                     }
 
                     ref segment @ (SegmentAddr::Local(arg)
@@ -188,19 +195,22 @@ fn generate_vm_code(parser: Parser) -> String {
                             _ => unreachable!(),
                         };
 
-                        format!(include_str!("asm_snippets/pop_local_arg_this_that.asm"), base_addr, arg)
+                        format!(
+                            include_str!("asm_snippets/pop_local_arg_this_that.asm"),
+                            base_addr, arg
+                        )
                     }
                 },
 
                 Inst::Add => format!(include_str!("asm_snippets/add.asm")),
                 Inst::Sub => format!(include_str!("asm_snippets/sub.asm")),
-                Inst::Neg => todo!(),
-                Inst::Eq => todo!(),
-                Inst::Gt => todo!(),
-                Inst::Lt => todo!(),
-                Inst::And => todo!(),
-                Inst::Or => todo!(),
-                Inst::Not => todo!(),
+                Inst::Neg => format!(include_str!("asm_snippets/neg.asm")),
+                Inst::Eq => format!(include_str!("asm_snippets/eq.asm"), i),
+                Inst::Gt => format!(include_str!("asm_snippets/gt.asm"), i),
+                Inst::Lt => format!(include_str!("asm_snippets/lt.asm"), i),
+                Inst::And => format!(include_str!("asm_snippets/and.asm")),
+                Inst::Or => format!(include_str!("asm_snippets/or.asm")),
+                Inst::Not => format!(include_str!("asm_snippets/not.asm")),
             }
             .as_str(),
         )

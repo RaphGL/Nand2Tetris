@@ -1,6 +1,6 @@
 // -- push pointer {0}
 @{0}
-D=A
+D=M
 @SP
 A=M
 M=D

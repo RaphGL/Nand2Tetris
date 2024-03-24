@@ -1,4 +1,4 @@
-// push constant {0}
+// -- push constant {0}
 @{0}
 D=A
 

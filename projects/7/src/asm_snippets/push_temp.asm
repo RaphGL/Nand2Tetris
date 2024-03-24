@@ -2,11 +2,10 @@
 @5
 D=A
 @{0}
-D=D+A
+D=D+M
 
 A=D
 D=M
-
 @SP
 A=M
 M=D
