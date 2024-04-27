@@ -1,5 +1,8 @@
-// todo: implement function, call and return instructions
-use std::{env, fs, path::Path, process::ExitCode};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
 
 #[derive(Debug)]
 enum SegmentAddr {
@@ -29,6 +32,9 @@ enum Inst {
     Label(String),
     Goto(String),
     IfGoto(String),
+    Function(String, u16),
+    Call(String, u16),
+    Return,
 }
 
 struct Parser<'a> {
@@ -53,11 +59,11 @@ impl<'a> Parser<'a> {
                 continue;
             }
 
-            let line_parts: Vec<_> = line.split(' ').map(|part| part.trim()).collect();
+            let line_parts: Vec<_> = line.split_whitespace().map(|part| part.trim()).collect();
 
             self.tokens.push(match line_parts[0] {
                 "push" => {
-                    let arg = line_parts[2].parse::<u16>().unwrap();
+                    let arg = line_parts[2].parse::<_>().unwrap();
                     Inst::Push(match line_parts[1] {
                         "constant" => SegmentAddr::Constant(arg),
                         "static" => SegmentAddr::Static(arg),
@@ -107,6 +113,12 @@ impl<'a> Parser<'a> {
                 "goto" => Inst::Goto(line_parts[1].into()),
                 "if-goto" => Inst::IfGoto(line_parts[1].into()),
 
+                "function" => {
+                    Inst::Function(line_parts[1].into(), line_parts[2].parse::<_>().unwrap())
+                }
+                "call" => Inst::Call(line_parts[1].into(), line_parts[2].parse::<_>().unwrap()),
+                "return" => Inst::Return,
+
                 invalid => {
                     return Err(format!(
                         "found invalid instruction \"{invalid}\" on line {linenum}"
@@ -120,9 +132,18 @@ impl<'a> Parser<'a> {
 }
 
 fn generate_vm_code(parser: Parser) -> String {
-    let mut asm = String::from(include_str!("asm_snippets/init.asm"));
     let file = Path::new(parser.file);
     let filename = file.file_stem().unwrap().to_str().unwrap();
+    let mut ret_no = 0;
+
+    let mut asm = String::from({
+        let call_sys_init = format!(
+            include_str!("asm_snippets/call.asm",),
+            "Sys.init", 0, ret_no
+        );
+
+        format!(include_str!("asm_snippets/init.asm"), call_sys_init)
+    });
 
     for (i, inst) in parser.tokens.iter().enumerate() {
         asm.push_str(
@@ -222,6 +243,19 @@ fn generate_vm_code(parser: Parser) -> String {
                 Inst::Goto(label) => format!(include_str!("asm_snippets/goto.asm"), label),
                 Inst::IfGoto(label) => format!(include_str!("asm_snippets/if_goto.asm"), label),
                 Inst::Label(name) => format!(include_str!("asm_snippets/label.asm"), name),
+
+                Inst::Function(name, vars_no) => {
+                    format!(include_str!("asm_snippets/function.asm"), name, vars_no)
+                }
+                Inst::Return => format!(include_str!("asm_snippets/return.asm")),
+                Inst::Call(name, args_no) => {
+                    ret_no += 1;
+                    let call = format!(
+                        include_str!("asm_snippets/call.asm",),
+                        name, args_no, ret_no
+                    );
+                    call
+                }
             }
             .as_str(),
         )
@@ -231,20 +265,43 @@ fn generate_vm_code(parser: Parser) -> String {
 }
 
 fn main() -> ExitCode {
-    let Some(vm_file) = env::args().nth(1) else {
-        eprintln!("A VM file path was not provided.");
-        return ExitCode::FAILURE;
-    };
-
-    let vm_file = Path::new(vm_file.as_str());
-    let mut parser = Parser::new(vm_file);
-    if let Err(err_msg) = parser.parse() {
-        eprintln!("{err_msg}");
+    let mut args = env::args();
+    if args.len() < 2 {
+        eprintln!("A VM file or directory was not provided.");
         return ExitCode::FAILURE;
     }
 
-    let vm_code = generate_vm_code(parser);
-    fs::write(vm_file.with_extension("asm"), vm_code).unwrap();
+    let input = PathBuf::from(args.nth(1).unwrap());
+    let mut output_file = String::new();
+
+    let compile_vm_file = |vm_file: PathBuf| -> Result<String, String> {
+        let mut parser = Parser::new(vm_file.as_path());
+        if let Err(err_msg) = parser.parse() {
+            return Err(err_msg);
+        }
+
+        Ok(generate_vm_code(parser))
+    };
+
+    if input.is_dir() {
+        for file in fs::read_dir(input).unwrap() {
+            let file = file.unwrap().path();
+            let ext = file.extension().unwrap().to_str().unwrap();
+            if ext == "vm" {
+                output_file += compile_vm_file(file).unwrap().as_str();
+            }
+        }
+    } else {
+        output_file += compile_vm_file(input).unwrap().as_str();
+    }
+
+    let filename = {
+        let curr_dir = env::current_dir().unwrap();
+        let mut mut_curr_dir = curr_dir.clone();
+        mut_curr_dir.push(curr_dir.file_name().unwrap().to_str().unwrap());
+        mut_curr_dir
+    };
+    fs::write(filename.with_extension("asm"), output_file).unwrap();
 
     ExitCode::SUCCESS
 }
